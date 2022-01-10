@@ -1,0 +1,198 @@
+<!doctype html>
+<html>
+
+
+<!--
+https://cms.tuxapp.xyz/dh_rss.zip
+-->
+<head>
+    <meta charset="utf-8" />
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.min.js" integrity="sha384-VHvPCCyXqtD5DqJeNxl2dtTyhF78xXNXdkwX1CZeRusQfRKp+tA7hAShOK/B/fQ2" crossorigin="anonymous"></script>
+<script>
+    //https://wissen-shopping-list-default-rtdb.europe-west1.firebasedatabase.app
+//     const config = {
+//   apiKey: "AIzaSyClIz7QtfKhwFPhpxh0V10exglasGAa5co",
+//   authDomain: "wissen-shopping-list.firebaseapp.com",
+//   databaseURL: "https://wissen-shopping-list-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "wissen-shopping-list",
+//   storageBucket: "wissen-shopping-list.appspot.com",
+//   messagingSenderId: "167766709298",
+//   appId: "1:167766709298:web:a11c1d4ac7bf3c4ec2582b",
+//   measurementId: "G-7L9M02PZ3C"
+// }; 
+      const config= firebaseConfig = {
+           apiKey: "",
+           authDomain: "",
+           databaseURL: "", 
+           projectId: "", 
+           storageBucket: "",
+           messagingSenderId: "",
+           appId: "",
+           measurementId: "" };
+
+        firebase.initializeApp(config);
+
+// Get a reference to the database service
+var database = firebase.database();
+//var liste = database.ref("/alinacaklar");
+var liste = database.ref("/items");
+</script>
+</head>
+<body>
+   <div class="container">
+       <div class="row justify-content-center">
+           <div class="col-12">
+               <div class="card shadow">
+                   <div class="card-header bg-dark text-light">Ürün Ekle</div>
+                   <div class="card-body">
+                    <form id="fEkle">
+                        Ad : <input type="text" class="form-control" id="ad" /><br>
+                        Adet : <input type="text" class="form-control" id="adet"><br>
+                        <button type="submit">Ekle</button>
+                    </form>
+                   </div>
+               </div>
+           </div>
+       </div>
+
+       <div class=" mt-4 row justify-content-center">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-light">Ürün Listesi</div>
+                <div class="card-body">
+                    <table class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-secondary text-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>AD</th>
+                                <th>Adet</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="ctx">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+   </div>
+
+   <form id="fUpd">
+       <input type="hidden" id="sel_id" value="" />
+    <div class="modal fade" id="updModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-light">Düzenle
+            
+            </div>
+            <div class="modal-body">
+            <label>Ad</label>
+            <input type="text" class=" mt-1 mb-3 form-control" id="u_ad" />
+            <label>Adet</label>
+            <input type="text" class=" mt-1 mb-3 form-control" id="u_adet" />
+
+            </div>
+            <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+        </div>
+    </div>
+    </form>
+</body>
+</html>
+<script>
+
+
+$("#fUpd").submit(function(e)
+{
+    e.preventDefault();
+
+    var o = 
+    {
+        ad : $("#u_ad").val(),
+        adet : $("#u_adet").val()
+    };
+
+    var id = $("#sel_id").val();
+
+    var ref = database.ref("alinacaklar/"+id);
+    ref.set(o);
+
+    $("#updModal").modal('hide');
+
+    return false;
+})
+   
+
+    $("#fEkle").submit(function(e){
+        e.preventDefault();
+
+        var o = { ad : $("#ad").val(), adet : $("#adet").val() };
+        console.log("Eklenecek : "),
+        console.log(o);
+
+        liste.push().set(o);
+
+        return false;
+    })
+
+    
+    liste.on('value', function(snapshot)
+    {
+            console.log("Veri Değişti");
+
+            $("#ctx").html('');
+            snapshot.forEach(function(data)
+            {
+                var key = data.key;
+                var val = data.val();
+                console.log("KEY : "+key+" VAL -> ", val);
+
+                var x  = "<tr>";
+                    x += "<td>"+key+"</td>";
+                    x += "<td>"+val.ad+"</td>";
+                    x += "<td>"+val.adet+"</td>";
+                    x += "<td><button rec_id='"+key+"' class='btn btn-primary btnEdit'>Düzenle</button></td>";
+                    x += "<td><button rec_id='"+key+"' class='btn btn-danger btnSil'>Sil</button></td>";
+                    
+                x += "</tr>";
+                $("#ctx").append(x);
+
+                
+            });
+
+            $(".btnEdit").off('click');
+            $(".btnEdit").click(function()
+            {
+                var id = $(this).attr('rec_id');
+                
+                //var obj = { ad : "Auto Item", adet: 999};
+                //database.ref("alinacaklar/"+id).set(obj);
+                var selectedItem = database.ref("alinacaklar/"+id);
+                selectedItem.once('value', function(selSnap)
+                {
+                    console.log(selSnap.val());
+                    $("#u_ad").val(selSnap.val().ad);
+                    $("#u_adet").val(selSnap.val().adet);
+                    $("#sel_id").val(id);
+                    $("#updModal").modal('show');
+                })
+            });
+
+            $(".btnSil").off('click');
+            $(".btnSil").click(function()
+            {
+               var id = $(this).attr('rec_id');
+               database.ref("alinacaklar/"+id).set(null);
+            });
+    });
+</script>
